@@ -1,0 +1,36 @@
+properties([pipelineTriggers([githubPush()])])
+ 
+pipeline {
+    agent {
+        label 'master'
+    }
+ 
+    stages {
+        /* checkout repo */
+        stage('Checkout SCM') {
+            steps {
+                checkout([
+                 $class: 'GitSCM',
+                 branches: [[name: 'main']],
+                 userRemoteConfigs: [[
+                    url: 'git@github.com:gaikwy22/Part1.git',
+                    credentialsId: '',
+                 ]]
+                ])
+            }
+        }
+         stage('Run Test') {
+            steps {
+                echo ">> Running tests "
+                sh "npm run test"
+            }
+        }
+    }
+ 
+    /* Cleanup workspace */
+    post {
+       always {
+           deleteDir()
+       }
+   }
+}

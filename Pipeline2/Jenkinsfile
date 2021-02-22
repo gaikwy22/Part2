@@ -1,0 +1,47 @@
+pipeline {
+    agent {
+        label 'master'
+    }
+ 
+    stages {
+        /* checkout repo */
+        stage('Checkout SCM') {
+            steps {
+                checkout([
+                 $class: 'GitSCM',
+                 branches: [[name: 'main']],
+                 userRemoteConfigs: [[
+                    url: 'git@github.com:gaikwy22/Part1.git',
+                    credentialsId: '',
+                 ]]
+                ])
+            }
+        }
+         stage('Build container') {
+            steps {
+                echo ">> Building container "
+                dir("${env.WORKSPACE}"){
+                sh "docker build -t webserver-image:latest ."
+                }
+            }
+        }
+        stage('Deploy application') {
+            steps {
+                echo ">> Building container "
+                sh "docker run --name webapp -d -p 80:80 -p 443:443 webserver-image:latest"
+            }
+        }
+        stages('Health Check'){
+            steps {
+                sh "curl http://localhost/"
+            }
+        }
+    }
+ 
+    /* Cleanup workspace */
+    post {
+       always {
+           deleteDir()
+       }
+   }
+}
